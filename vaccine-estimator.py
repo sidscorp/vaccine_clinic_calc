@@ -152,13 +152,13 @@ num_waiting_area_adverse = st.number_input("Input the number of waiting spots av
 
 if(st.button('Calculate Metrics')): 
     RANDOM_SEED = 42
-    NUM_CHECKIN = 3
+    NUM_CHECKIN = num_checkin
     CHECKIN_TIME = 1
     PATIENT_INTER = 60/num_arrive_hour
     SIM_TIME = 60*8
-    NUM_VACCINATORS = 8
+    NUM_VACCINATORS = num_vaccine_booths
     VACCINATION_TIME = 4
-    NUM_ADVERSEWAIT = 35
+    NUM_ADVERSEWAIT = num_waiting_area_adverse
     ADVERSEWAIT_TIME = 15
     [avg_checkin_waitT, avg_checkin_waitN, avg_vaccine_waitT, avg_vaccine_waitN, avg_adverse_waitT, avg_adverse_waitN, avg_total_time] = run_vaccination_simulation(RANDOM_SEED, NUM_CHECKIN, CHECKIN_TIME, PATIENT_INTER, SIM_TIME, NUM_VACCINATORS, VACCINATION_TIME, NUM_ADVERSEWAIT, ADVERSEWAIT_TIME)
     st.text("Patients can expect to be in the facility for {:0.1f} mins.".format(avg_total_time)) 
