@@ -12,6 +12,7 @@ def run_vaccination_simulation(RANDOM_SEED, NUM_CHECKIN, CHECKIN_TIME, PATIENT_I
     output_adverse_waittime = []
     output_adverse_waitnum = []
     output_total_facility_time = []
+    output_num_vaccinated = []
     my_bar = st.progress(0)
     
     for replication in range(0,30):
@@ -129,12 +130,12 @@ def run_vaccination_simulation(RANDOM_SEED, NUM_CHECKIN, CHECKIN_TIME, PATIENT_I
         output_adverse_waittime.append(average_adverse_wait_time)
         output_adverse_waitnum.append(np.mean(avg_waiting_adverse))
         output_total_facility_time.append(average_facility_total_time)
-    
+        output_num_vaccinated.append(len(facility_departure_times))
         my_bar.progress(percent_complete + 1)
         
     return [np.mean(output_checkin_waittime), np.mean(output_checkin_waitnum), np.mean(output_vaccination_waittime), 
             np.mean(output_vaccination_waitnum), np.mean(output_adverse_waittime), np.mean(output_adverse_waitnum),
-            np.mean(output_total_facility_time)]
+            np.mean(output_total_facility_time), np.mean(output_num_vaccinated)]
 
 
 
@@ -160,8 +161,9 @@ if(st.button('Calculate Metrics')):
     VACCINATION_TIME = 4
     NUM_ADVERSEWAIT = num_waiting_area_adverse
     ADVERSEWAIT_TIME = 15
-    [avg_checkin_waitT, avg_checkin_waitN, avg_vaccine_waitT, avg_vaccine_waitN, avg_adverse_waitT, avg_adverse_waitN, avg_total_time] = run_vaccination_simulation(RANDOM_SEED, NUM_CHECKIN, CHECKIN_TIME, PATIENT_INTER, SIM_TIME, NUM_VACCINATORS, VACCINATION_TIME, NUM_ADVERSEWAIT, ADVERSEWAIT_TIME)
+    [avg_checkin_waitT, avg_checkin_waitN, avg_vaccine_waitT, avg_vaccine_waitN, avg_adverse_waitT, avg_adverse_waitN, avg_total_time, tot_num_vaccinated] = run_vaccination_simulation(RANDOM_SEED, NUM_CHECKIN, CHECKIN_TIME, PATIENT_INTER, SIM_TIME, NUM_VACCINATORS, VACCINATION_TIME, NUM_ADVERSEWAIT, ADVERSEWAIT_TIME)
     st.text("Patients can expect to be in the facility for {:0.1f} mins.".format(avg_total_time)) 
     st.text("Approximately {:0.1f} patients must wait before check-in".format(avg_checkin_waitN)) 
     st.text("Patients can expect to wait for approximately {:0.1f} mins to check-in".format(avg_checkin_waitT))
     st.text("Approximately {:0.1f} patients must wait between check-in and getting vaccine".format(avg_vaccine_waitN)) 
+    st.text("Approximately {:0.1f} patients can expect to be vaccinated on this day".format(tot_num_vaccinated))
