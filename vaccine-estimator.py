@@ -103,21 +103,21 @@ def run_vaccination_simulation(RANDOM_SEED, NUM_CHECKIN, CHECKIN_TIME, PATIENT_I
         #print("Approximate wait time between getting vaccine and finding adverse monitoring wait spot is %.1f mins." % average_adverse_wait_time)
 
         avg_waiting_checkin = []
-        for i in [x * 0.1 for x in range(0, SIM_TIME)]:
+        for i in [x * 0.1 for x in range(0, SIM_TIME*10)]:
             num_arrived_facility = sum(1 for j in facility_arrival_times if j <= i)
             num_started_checin = sum(1 for j in checkin_begin_times if j <= i)
             avg_waiting_checkin.append(num_arrived_facility - num_started_checin)
         #print("Approximate # of patients waiting to checkin at any time is %.1f." % np.mean(avg_waiting_checkin))
 
         avg_waiting_vaccine = []
-        for i in [x * 0.1 for x in range(0, SIM_TIME)]:
+        for i in [x * 0.1 for x in range(0, SIM_TIME*10)]:
             num_finished_checin = sum(1 for j in checkin_end_times if j <= i)
             num_started_vaccine = sum(1 for j in vaccination_begin_times if j <= i)
             avg_waiting_vaccine.append(num_finished_checin - num_started_vaccine)
         #print("Approximate # of patients waiting between checkin and vaccine at any time is %.1f." % np.mean(avg_waiting_vaccine))
 
         avg_waiting_adverse = []
-        for i in [x * 0.1 for x in range(0, SIM_TIME)]:
+        for i in [x * 0.1 for x in range(0, SIM_TIME*10)]:
             num_finished_vaccine = sum(1 for j in vaccination_end_times if j <= i)
             num_started_adverse = sum(1 for j in adverse_begin_times if j <= i)
             avg_waiting_adverse.append(num_finished_vaccine - num_started_adverse)
