@@ -179,7 +179,8 @@ if(st.button('Calculate Metrics')):
     NUM_CHECKIN = num_checkin
     CHECKIN_TIME = 1
     PATIENT_INTER = 60/num_arrive_hour
-    NUM_REPS = 15
+    #NUM_REPS = 15
+    NUM_REPS = math.ceil(-0.114*num_arrive_hour + 33.4)
     SIM_TIME = 60*8
     NUM_VACCINATORS = num_vaccine_booths
     VACCINATION_TIME = 4
