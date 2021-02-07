@@ -178,7 +178,7 @@ if(st.button('Calculate Metrics')):
     NUM_CHECKIN = num_checkin
     CHECKIN_TIME = 1
     PATIENT_INTER = 60/num_arrive_hour
-    NUM_REPS = (num_arrive_hour*8)/500
+    NUM_REPS = max(10, (num_arrive_hour*8)/500)
     SIM_TIME = 60*8
     NUM_VACCINATORS = num_vaccine_booths
     VACCINATION_TIME = 4
@@ -192,6 +192,6 @@ if(st.button('Calculate Metrics')):
     else:
         st.error("Patients can expect to be in the facility for {:0.1f} (+/- {:0.1f}) mins.".format(avg_total_time, conf_total_time))
     st.info("Approximately {:0.1f} (+/- {:0.1f}) patients can expect to be vaccinated during this 8 hour day".format(tot_num_vaccinated, conf_total_vaccinated))
-    st.info("Approximately {:0.1f} patients must wait before check-in".format(avg_checkin_waitN)) 
-    st.info("Patients can expect to wait for approximately {:0.1f} mins to check-in".format(avg_checkin_waitT))
-    st.info("Approximately {:0.1f} patients must wait between check-in and getting vaccine".format(avg_vaccine_waitN)) 
+    #st.info("Approximately {:0.1f} patients must wait before check-in".format(avg_checkin_waitN)) 
+    #st.info("Patients can expect to wait for approximately {:0.1f} mins to check-in".format(avg_checkin_waitT))
+    #st.info("Approximately {:0.1f} patients must wait between check-in and getting vaccine".format(avg_vaccine_waitN)) 
