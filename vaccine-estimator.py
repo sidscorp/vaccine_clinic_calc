@@ -4,7 +4,18 @@ import numpy as np
 import math
 import streamlit as st
 
-def run_vaccination_simulation(RANDOM_SEED, NUM_CHECKIN, CHECKIN_TIME, PATIENT_INTER, SIM_TIME, NUM_VACCINATORS, VACCINATION_TIME, NUM_ADVERSEWAIT, ADVERSEWAIT_TIME):
+import numpy as np
+import scipy.stats
+
+
+def conf_interval(data, confidence=0.95):
+    a = 1.0 * np.array(data)
+    n = len(a)
+    m, se = np.mean(a), scipy.stats.sem(a)
+    h = se * scipy.stats.t.ppf((1 + confidence) / 2., n-1)
+    return h
+
+def run_vaccination_simulation(NUM_REPS, RANDOM_SEED, NUM_CHECKIN, CHECKIN_TIME, PATIENT_INTER, SIM_TIME, NUM_VACCINATORS, VACCINATION_TIME, NUM_ADVERSEWAIT, ADVERSEWAIT_TIME):
     output_checkin_waittime = []
     output_checkin_waitnum = []
     output_vaccination_waittime = []
@@ -13,10 +24,10 @@ def run_vaccination_simulation(RANDOM_SEED, NUM_CHECKIN, CHECKIN_TIME, PATIENT_I
     output_adverse_waitnum = []
     output_total_facility_time = []
     output_num_vaccinated = []
-    my_bar = st.progress(0)
-    
-    for replication in range(0,30):
-        percent_complete = math.ceil(100*(replication/30))
+    my_bar = st.progress(0.0)
+    reps = math.ceil(NUM_REPS)
+    for replication in range(0,reps):
+        percent_complete = float(replication/reps)
         facility_arrival_times = []
         checkin_begin_times = []
         checkin_end_times = []
@@ -131,11 +142,12 @@ def run_vaccination_simulation(RANDOM_SEED, NUM_CHECKIN, CHECKIN_TIME, PATIENT_I
         output_adverse_waitnum.append(np.mean(avg_waiting_adverse))
         output_total_facility_time.append(average_facility_total_time)
         output_num_vaccinated.append(len(facility_departure_times))
-        my_bar.progress(percent_complete + 1)
         
+        my_bar.progress(float(percent_complete))
+    my_bar.progress(1.0)   
     return [np.mean(output_checkin_waittime), np.mean(output_checkin_waitnum), np.mean(output_vaccination_waittime), 
-            np.mean(output_vaccination_waitnum), np.mean(output_adverse_waittime), np.mean(output_adverse_waitnum),
-            np.mean(output_total_facility_time), np.mean(output_num_vaccinated)]
+            np.mean(output_vaccination_waitnum), np.mean(output_adverse_waittime), np.mean(output_adverse_waitnum), conf_interval(output_total_facility_time),
+            np.mean(output_total_facility_time), conf_interval(output_num_vaccinated), np.mean(output_num_vaccinated)]
 
 
 
@@ -156,14 +168,21 @@ if(st.button('Calculate Metrics')):
     NUM_CHECKIN = num_checkin
     CHECKIN_TIME = 1
     PATIENT_INTER = 60/num_arrive_hour
+    NUM_REPS = (num_arrive_hour*8)/500
     SIM_TIME = 60*8
     NUM_VACCINATORS = num_vaccine_booths
     VACCINATION_TIME = 4
     NUM_ADVERSEWAIT = num_waiting_area_adverse
     ADVERSEWAIT_TIME = 15
-    [avg_checkin_waitT, avg_checkin_waitN, avg_vaccine_waitT, avg_vaccine_waitN, avg_adverse_waitT, avg_adverse_waitN, avg_total_time, tot_num_vaccinated] = run_vaccination_simulation(RANDOM_SEED, NUM_CHECKIN, CHECKIN_TIME, PATIENT_INTER, SIM_TIME, NUM_VACCINATORS, VACCINATION_TIME, NUM_ADVERSEWAIT, ADVERSEWAIT_TIME)
-    st.text("Patients can expect to be in the facility for {:0.1f} mins.".format(avg_total_time)) 
-    st.text("Approximately {:0.1f} patients must wait before check-in".format(avg_checkin_waitN)) 
-    st.text("Patients can expect to wait for approximately {:0.1f} mins to check-in".format(avg_checkin_waitT))
-    st.text("Approximately {:0.1f} patients must wait between check-in and getting vaccine".format(avg_vaccine_waitN)) 
-    st.text("Approximately {:0.1f} patients can expect to be vaccinated on this day".format(tot_num_vaccinated))
+    [avg_checkin_waitT, avg_checkin_waitN, avg_vaccine_waitT, avg_vaccine_waitN, avg_adverse_waitT, avg_adverse_waitN, conf_total_time, avg_total_time, conf_total_vaccinated, tot_num_vaccinated] = run_vaccination_simulation(NUM_REPS, RANDOM_SEED, NUM_CHECKIN, CHECKIN_TIME, PATIENT_INTER, SIM_TIME, NUM_VACCINATORS, VACCINATION_TIME, NUM_ADVERSEWAIT, ADVERSEWAIT_TIME)
+    if(avg_total_time <= 30):
+        st.success("Patients can expect to be in the facility for {:0.1f} (+/- {:0.1f}) mins.".format(avg_total_time, conf_total_time)) 
+    elif(avg_total_time <= 60):
+        st.warning("Patients can expect to be in the facility for {:0.1f} (+/- {:0.1f}) mins.".format(avg_total_time, conf_total_time))
+    else:
+        st.error("Patients can expect to be in the facility for {:0.1f} (+/- {:0.1f}) mins.".format(avg_total_time, conf_total_time))
+    st.info("Approximately {:0.1f} (+/- {:0.1f}) patients can expect to be vaccinated during this 8 hour day".format(tot_num_vaccinated, conf_total_vaccinated))
+    st.info("Approximately {:0.1f} patients must wait before check-in".format(avg_checkin_waitN)) 
+    st.info("Patients can expect to wait for approximately {:0.1f} mins to check-in".format(avg_checkin_waitT))
+    st.info("Approximately {:0.1f} patients must wait between check-in and getting vaccine".format(avg_vaccine_waitN)) 
+
