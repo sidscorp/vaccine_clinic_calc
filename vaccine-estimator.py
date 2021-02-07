@@ -3,11 +3,9 @@ import simpy
 import numpy as np
 import math
 import streamlit as st
-from htbuilder import HtmlElement, div, ul, li, br, hr, a, p, img, styles, classes, fonts
-from htbuilder.units import percent, px
-from htbuilder.funcs import rgba, rgb
-import numpy as np
+
 import scipy.stats
+
 
 
 def conf_interval(data, confidence=0.95):
@@ -17,76 +15,6 @@ def conf_interval(data, confidence=0.95):
     h = se * scipy.stats.t.ppf((1 + confidence) / 2., n-1)
     return h
 
-def image(src_as_string, **style):
-    return img(src=src_as_string, style=styles(**style))
-
-
-def link(link, text, **style):
-    return a(_href=link, _target="_blank", style=styles(**style))(text)
-
-
-def layout(*args):
-
-    style = """
-    <style>
-      # MainMenu {visibility: hidden;}
-      footer {visibility: hidden;}
-     .stApp { bottom: 105px; }
-    </style>
-    """
-
-    style_div = styles(
-        position="fixed",
-        left=0,
-        bottom=0,
-        margin=px(0, 0, 0, 0),
-        width=percent(100),
-        color="black",
-        text_align="center",
-        height="auto",
-        opacity=1
-    )
-
-    style_hr = styles(
-        display="block",
-        margin=px(8, 8, "auto", "auto"),
-        border_style="inset",
-        border_width=px(2)
-    )
-
-    body = p()
-    foot = div(
-        style=style_div
-    )(
-        hr(
-            style=style_hr
-        ),
-        body
-    )
-
-    st.markdown(style, unsafe_allow_html=True)
-
-    for arg in args:
-        if isinstance(arg, str):
-            body(arg)
-
-        elif isinstance(arg, HtmlElement):
-            body(arg)
-
-    st.markdown(str(foot), unsafe_allow_html=True)
-
-
-def footer():
-    myargs = [
-        "Made in ",
-        image('https://avatars3.githubusercontent.com/u/45109972?s=400&v=4',
-              width=px(25), height=px(25)),
-        " by ",
-        link("https://twitter.com/SiddNambiar", "@SiddNambiar"),
-        br(),
-        #link("https://buymeacoffee.com/chrischross", image('https://i.imgur.com/thJhzOO.png')),
-    ]
-    layout(*myargs)
 
 
 def run_vaccination_simulation(NUM_REPS, RANDOM_SEED, NUM_CHECKIN, CHECKIN_TIME, PATIENT_INTER, SIM_TIME, NUM_VACCINATORS, VACCINATION_TIME, NUM_ADVERSEWAIT, ADVERSEWAIT_TIME):
@@ -227,7 +155,15 @@ def run_vaccination_simulation(NUM_REPS, RANDOM_SEED, NUM_CHECKIN, CHECKIN_TIME,
 
 st.title('Vaccine Clinic Scheduling & Staffing Calculator')
 
-st.write("This calculator allows you to experiment with scheduling and staffing of patients arriving at a vaccination clinic")
+st.markdown('This calculator allows you to experiment with patient scheduling and personnel staffing at a single vaccination clinic \
+            to estimate the effects on desired operational goals and metrics.')
+st.markdown('The flow of patients through the clinic is assumed to be the following: Patients arrive to the facility according to a schedule. \
+            Patients proceed to one (of maybe several) check-in stations. If all stations are occupied, patients wait in line.\
+            Following check-in, patients proceed to one of several available vaccination booths (or wait in line if all are busy).\
+            After getting a vaccine, patients are asked to proceed to a waiting area for approximately 15 minutes while they are monitored for\
+            adverse reactions. After 15 minutes, patients may safely leave the facility.')
+st.markdown('It is assumed that check-in takes approximately 1 minute and that the vaccination process takes approximately 4 minutes.\
+            If you would like to experiment with these parameters as well, feel free to reach out to the developer (Sidd Nambiar; Twitter: @SiddNambiar).')
 num_arrive_hour = st.number_input("Input the number of patients you expect will arrive in an hour", min_value = 1)
 num_checkin = st.number_input("Input the number of check-in counters available for your patients", min_value = 1)
 num_vaccine_booths = st.number_input("Input the number of vaccination booths available at your location", min_value = 1)
@@ -259,5 +195,3 @@ if(st.button('Calculate Metrics')):
     st.info("Approximately {:0.1f} patients must wait before check-in".format(avg_checkin_waitN)) 
     st.info("Patients can expect to wait for approximately {:0.1f} mins to check-in".format(avg_checkin_waitT))
     st.info("Approximately {:0.1f} patients must wait between check-in and getting vaccine".format(avg_vaccine_waitN)) 
-
-footer()
