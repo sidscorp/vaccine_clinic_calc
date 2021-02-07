@@ -3,7 +3,9 @@ import simpy
 import numpy as np
 import math
 import streamlit as st
-
+from htbuilder import HtmlElement, div, ul, li, br, hr, a, p, img, styles, classes, fonts
+from htbuilder.units import percent, px
+from htbuilder.funcs import rgba, rgb
 import numpy as np
 import scipy.stats
 
@@ -14,6 +16,78 @@ def conf_interval(data, confidence=0.95):
     m, se = np.mean(a), scipy.stats.sem(a)
     h = se * scipy.stats.t.ppf((1 + confidence) / 2., n-1)
     return h
+
+def image(src_as_string, **style):
+    return img(src=src_as_string, style=styles(**style))
+
+
+def link(link, text, **style):
+    return a(_href=link, _target="_blank", style=styles(**style))(text)
+
+
+def layout(*args):
+
+    style = """
+    <style>
+      # MainMenu {visibility: hidden;}
+      footer {visibility: hidden;}
+     .stApp { bottom: 105px; }
+    </style>
+    """
+
+    style_div = styles(
+        position="fixed",
+        left=0,
+        bottom=0,
+        margin=px(0, 0, 0, 0),
+        width=percent(100),
+        color="black",
+        text_align="center",
+        height="auto",
+        opacity=1
+    )
+
+    style_hr = styles(
+        display="block",
+        margin=px(8, 8, "auto", "auto"),
+        border_style="inset",
+        border_width=px(2)
+    )
+
+    body = p()
+    foot = div(
+        style=style_div
+    )(
+        hr(
+            style=style_hr
+        ),
+        body
+    )
+
+    st.markdown(style, unsafe_allow_html=True)
+
+    for arg in args:
+        if isinstance(arg, str):
+            body(arg)
+
+        elif isinstance(arg, HtmlElement):
+            body(arg)
+
+    st.markdown(str(foot), unsafe_allow_html=True)
+
+
+def footer():
+    myargs = [
+        "Made in ",
+        image('https://avatars3.githubusercontent.com/u/45109972?s=400&v=4',
+              width=px(25), height=px(25)),
+        " by ",
+        link("https://twitter.com/SiddNambiar", "@SiddNambiar"),
+        br(),
+        #link("https://buymeacoffee.com/chrischross", image('https://i.imgur.com/thJhzOO.png')),
+    ]
+    layout(*myargs)
+
 
 def run_vaccination_simulation(NUM_REPS, RANDOM_SEED, NUM_CHECKIN, CHECKIN_TIME, PATIENT_INTER, SIM_TIME, NUM_VACCINATORS, VACCINATION_TIME, NUM_ADVERSEWAIT, ADVERSEWAIT_TIME):
     output_checkin_waittime = []
@@ -186,3 +260,4 @@ if(st.button('Calculate Metrics')):
     st.info("Patients can expect to wait for approximately {:0.1f} mins to check-in".format(avg_checkin_waitT))
     st.info("Approximately {:0.1f} patients must wait between check-in and getting vaccine".format(avg_vaccine_waitN)) 
 
+footer()
