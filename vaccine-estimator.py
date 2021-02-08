@@ -197,13 +197,13 @@ if(st.button('Calculate Metrics')):
         pass
         #st.success("Approximately {:0.1f} patients will wait in line for check-in".format(avg_checkin_waitN))
     elif(avg_checkin_waitN <= 15):
-        st.warning("Approximately {:0.1f} patients will wait in line for check-in. May need more check-in counters".format(avg_checkin_waitN))
+        st.warning("Approximately {:0.0f} patients will wait in line for check-in. May need more check-in counters".format(avg_checkin_waitN))
     else:
-        st.error("Approximately {:0.1f} patients will wait in line for check-in. Please add more check-in counters".format(avg_checkin_waitN))
+        st.error("Approximately {:0.0f} patients will wait in line for check-in. Please add more check-in counters".format(avg_checkin_waitN))
 
     if(avg_vaccine_waitN >= 5):
-        st.error("Approximately {:0.1f} patients will wait in line between check-in and vaccination. Please add more vaccination booths.".format(avg_vaccine_waitN))
+        st.error("Approximately {:0.0f} patients will wait in line between check-in and vaccination. Please add more vaccination booths.".format(avg_vaccine_waitN))
     if(avg_adverse_waitN >= 2):
-        st.error("Approximately {:0.1f} patients will not have adverse waiting spots. Please add more.".format(avg_adverse_waitN))
-    st.info("Approximately {:0.1f} (+/- {:0.1f}) patients can expect to be vaccinated during this {} hour time-frame".format(tot_num_vaccinated, conf_total_vaccinated, hours_facility_open))
+        st.error("Approximately {:0.0f} patients will not have adverse waiting spots. Please add more.".format(avg_adverse_waitN))
+    st.info("Approximately {:0.0f} (+/- {:0.0f}) patients can expect to be vaccinated during this {} hour time-frame".format(tot_num_vaccinated, conf_total_vaccinated, hours_facility_open))
 
