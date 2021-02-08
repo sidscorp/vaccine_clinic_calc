@@ -161,7 +161,7 @@ st.markdown('The flow of patients through the clinic is assumed to be the follow
             Following check-in, patients proceed to one of several available vaccination booths (or wait in line if all are busy).\
             After getting a vaccine, patients are asked to proceed to a waiting area for approximately 15 minutes while they are monitored for\
             adverse reactions. After 15 minutes, patients may safely leave the facility.')
-st.markdown('If you would like to experiment with additional parameters or would like modifications, please feel free to reach out to Dr. Sidd Nambiar (Twitter: [@SiddNambiar](https://twitter.com/SiddNambiar)).')
+st.markdown('If you would like to experiment with additional parameters or would like modifications, please feel free to reach out to Dr. Nambiar (Twitter: [@SiddNambiar](https://twitter.com/SiddNambiar)).')
 num_arrive_hour = st.number_input("Input the number of patients you expect will arrive in an hour", min_value = 1, value = 30)
 num_checkin = st.number_input("Input the number of check-in counters available for your patients", min_value = 1, value = 1)
 num_vaccine_booths = st.number_input("Input the number of vaccination booths available at your location", min_value = 1, value = 5)
