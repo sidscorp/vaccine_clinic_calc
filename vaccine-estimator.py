@@ -173,17 +173,19 @@ num_checkin = st.number_input("Input the number of check-in counters available f
 num_vaccine_booths = st.number_input("Input the number of vaccination booths available at your location", min_value = 1)
 num_waiting_area_adverse = st.number_input("Input the number of waiting spots available for patients while being monitored for adverse reactions", min_value = 1)
 hours_facility_open = st.number_input("Input the number of hours your facility is open for (e.g. 8)", min_value = 1)
+CHECKIN_TIME = st.number_input("Input the approximate amount of time (mins) to check-in at your facility", value = 1)
+VACCINATION_TIME = st.number_input("Input the approximate amount of time (mins) for a single vaccination at your facility", value = 4)
 
 if(st.button('Calculate Metrics')): 
     RANDOM_SEED = 42
     NUM_CHECKIN = num_checkin
-    CHECKIN_TIME = 1
+    #CHECKIN_TIME = 1
     PATIENT_INTER = 60/num_arrive_hour
     #NUM_REPS = 15
     NUM_REPS = math.ceil(-0.114*num_arrive_hour + 33.4)
     SIM_TIME = 60*hours_facility_open
     NUM_VACCINATORS = num_vaccine_booths
-    VACCINATION_TIME = 4
+    #VACCINATION_TIME = 4
     NUM_ADVERSEWAIT = num_waiting_area_adverse
     ADVERSEWAIT_TIME = 15
     [avg_checkin_waitT, avg_checkin_waitN, avg_vaccine_waitT, avg_vaccine_waitN, avg_adverse_waitT, avg_adverse_waitN, conf_total_time, avg_total_time, conf_total_vaccinated, tot_num_vaccinated] = run_vaccination_simulation(NUM_REPS, RANDOM_SEED, NUM_CHECKIN, CHECKIN_TIME, PATIENT_INTER, SIM_TIME, NUM_VACCINATORS, VACCINATION_TIME, NUM_ADVERSEWAIT, ADVERSEWAIT_TIME)
