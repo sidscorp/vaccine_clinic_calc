@@ -52,11 +52,11 @@ def run_vaccination_simulation(NUM_REPS, RANDOM_SEED, NUM_CHECKIN, CHECKIN_TIME,
                 self.adversewaittime = adversewait_time
 
             def checkin(self, patient):
-                yield self.env.timeout(np.random.triangular(CHECKIN_TIME - 1, CHECKIN_TIME, CHECKIN_TIME + 1))
+                yield self.env.timeout(np.random.triangular(max(0.2, CHECKIN_TIME - 1), CHECKIN_TIME, CHECKIN_TIME + 1))
 
 
             def vaccinate(self, patient):
-                yield self.env.timeout(np.random.triangular(VACCINATION_TIME - 1, VACCINATION_TIME, VACCINATION_TIME + 1))
+                yield self.env.timeout(np.random.triangular(max(VACCINATION_TIME - 1, 0.2), VACCINATION_TIME, VACCINATION_TIME + 1))
 
             def monitor_adverse(self, patient):
                 yield self.env.timeout(ADVERSEWAIT_TIME)
@@ -171,8 +171,8 @@ num_checkin = st.number_input("Input the number of check-in counters available f
 num_vaccine_booths = st.number_input("Input the number of vaccination booths available at your location", min_value = 1, value = 5)
 num_waiting_area_adverse = st.number_input("Input the number of waiting spots available for patients while being monitored for adverse reactions", min_value = 1, value = 5)
 hours_facility_open = st.number_input("Input the number of hours your facility is open for (e.g. 8)", min_value = 1, value = 8)
-CHECKIN_TIME = st.number_input("Input the approximate amount of time (mins) to check-in at your facility", min_value = 0.1, value = 1)
-VACCINATION_TIME = st.number_input("Input the approximate amount of time (mins) for a single vaccination at your facility", min_value = 1, value = 4)
+CHECKIN_TIME = st.number_input("Input the approximate amount of time (mins) to check-in at your facility", min_value = 0.1, value = 1.0)
+VACCINATION_TIME = st.number_input("Input the approximate amount of time (mins) for a single vaccination at your facility", min_value = 0.1, value = 4.0)
 
 if(st.button('Calculate Metrics')): 
     RANDOM_SEED = 42
