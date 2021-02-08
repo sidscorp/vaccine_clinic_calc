@@ -167,7 +167,7 @@ st.markdown('The flow of patients through the clinic is assumed to be the follow
             adverse reactions. After 15 minutes, patients may safely leave the facility.')
 st.markdown('It is assumed that check-in takes approximately 1 minute and that the vaccination process takes approximately 4 minutes.\
             The calculator assumes some variability in these numbers.\
-            If you would like to experiment with these parameters as well, feel free to reach out to the developer (Sidd Nambiar; Twitter: [@SiddNambiar](https://twitter.com/home)).')
+            If you would like to experiment with these parameters as well, feel free to reach out to the developer (Sidd Nambiar; Twitter: [@SiddNambiar](https://twitter.com/SiddNambiar)).')
 num_arrive_hour = st.number_input("Input the number of patients you expect will arrive in an hour", min_value = 1)
 num_checkin = st.number_input("Input the number of check-in counters available for your patients", min_value = 1)
 num_vaccine_booths = st.number_input("Input the number of vaccination booths available at your location", min_value = 1)
