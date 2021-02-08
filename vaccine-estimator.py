@@ -172,7 +172,7 @@ num_arrive_hour = st.number_input("Input the number of patients you expect will 
 num_checkin = st.number_input("Input the number of check-in counters available for your patients", min_value = 1)
 num_vaccine_booths = st.number_input("Input the number of vaccination booths available at your location", min_value = 1)
 num_waiting_area_adverse = st.number_input("Input the number of waiting spots available for patients while being monitored for adverse reactions", min_value = 1)
-
+hours_facility_open = st.number_input("Input the number of hours your facility is open for (e.g. 8)", min_value = 1)
 
 if(st.button('Calculate Metrics')): 
     RANDOM_SEED = 42
@@ -181,7 +181,7 @@ if(st.button('Calculate Metrics')):
     PATIENT_INTER = 60/num_arrive_hour
     #NUM_REPS = 15
     NUM_REPS = math.ceil(-0.114*num_arrive_hour + 33.4)
-    SIM_TIME = 60*8
+    SIM_TIME = 60*hours_facility_open
     NUM_VACCINATORS = num_vaccine_booths
     VACCINATION_TIME = 4
     NUM_ADVERSEWAIT = num_waiting_area_adverse
@@ -205,5 +205,5 @@ if(st.button('Calculate Metrics')):
         st.error("Approximately {:0.1f} patients will wait in line between check-in and vaccination. Please add more vaccination booths.".format(avg_vaccine_waitN))
     if(avg_adverse_waitN >= 2):
         st.error("Approximately {:0.1f} patients will not have adverse waiting spots. Please add more.".format(avg_adverse_waitN))
-    st.info("Approximately {:0.1f} (+/- {:0.1f}) patients can expect to be vaccinated during this 8 hour day".format(tot_num_vaccinated, conf_total_vaccinated))
+    st.info("Approximately {:0.1f} (+/- {:0.1f}) patients can expect to be vaccinated during this {} hour time-frame".format(tot_num_vaccinated, conf_total_vaccinated, hours_facility_open))
 
