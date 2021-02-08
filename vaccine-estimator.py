@@ -168,13 +168,13 @@ st.markdown('The flow of patients through the clinic is assumed to be the follow
 st.markdown('It is assumed that check-in takes approximately 1 minute and that the vaccination process takes approximately 4 minutes.\
             The calculator assumes some variability in these numbers.\
             If you would like to experiment with these parameters as well, feel free to reach out to the developer (Sidd Nambiar; Twitter: [@SiddNambiar](https://twitter.com/SiddNambiar)).')
-num_arrive_hour = st.number_input("Input the number of patients you expect will arrive in an hour", min_value = 1)
-num_checkin = st.number_input("Input the number of check-in counters available for your patients", min_value = 1)
-num_vaccine_booths = st.number_input("Input the number of vaccination booths available at your location", min_value = 1)
-num_waiting_area_adverse = st.number_input("Input the number of waiting spots available for patients while being monitored for adverse reactions", min_value = 1)
-hours_facility_open = st.number_input("Input the number of hours your facility is open for (e.g. 8)", min_value = 1)
-CHECKIN_TIME = st.number_input("Input the approximate amount of time (mins) to check-in at your facility", value = 1)
-VACCINATION_TIME = st.number_input("Input the approximate amount of time (mins) for a single vaccination at your facility", value = 4)
+num_arrive_hour = st.number_input("Input the number of patients you expect will arrive in an hour", min_value = 1, value = 30)
+num_checkin = st.number_input("Input the number of check-in counters available for your patients", min_value = 1, value = 1)
+num_vaccine_booths = st.number_input("Input the number of vaccination booths available at your location", min_value = 1, value = 5)
+num_waiting_area_adverse = st.number_input("Input the number of waiting spots available for patients while being monitored for adverse reactions", min_value = 1, value = 5)
+hours_facility_open = st.number_input("Input the number of hours your facility is open for (e.g. 8)", min_value = 1, value = 8)
+CHECKIN_TIME = st.number_input("Input the approximate amount of time (mins) to check-in at your facility", min_value = 1, value = 1)
+VACCINATION_TIME = st.number_input("Input the approximate amount of time (mins) for a single vaccination at your facility", min_value = 1, value = 4)
 
 if(st.button('Calculate Metrics')): 
     RANDOM_SEED = 42
