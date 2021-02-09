@@ -167,7 +167,7 @@ num_checkin = st.number_input("Input the number of check-in counters available f
 num_vaccine_booths = st.number_input("Input the number of vaccination booths available at your location", min_value = 1, value = 5)
 num_waiting_area_adverse = st.number_input("Input the number of waiting spots available for patients while being monitored for adverse reactions", min_value = 1, value = 5)
 hours_facility_open = st.number_input("Input the number of hours your facility is open for (e.g. 8)", min_value = 1, value = 8)
-CHECKIN_TIME = st.number_input("Input the approximate amount of time (mins) to check-in at your facility", min_value = 0.1, value = 1.0)
+CHECKIN_TIME = st.number_input("Input the approximate amount of time (mins) for a single patient to check-in at your facility", min_value = 0.1, value = 1.0)
 VACCINATION_TIME = st.number_input("Input the approximate amount of time (mins) for a single vaccination at your facility", min_value = 0.1, value = 4.0)
 
 if(st.button('Calculate Metrics')): 
@@ -184,22 +184,28 @@ if(st.button('Calculate Metrics')):
     ADVERSEWAIT_TIME = 15
     [avg_checkin_waitT, avg_checkin_waitN, avg_vaccine_waitT, avg_vaccine_waitN, avg_adverse_waitT, avg_adverse_waitN, conf_total_time, avg_total_time, conf_total_vaccinated, tot_num_vaccinated] = run_vaccination_simulation(NUM_REPS, RANDOM_SEED, NUM_CHECKIN, CHECKIN_TIME, PATIENT_INTER, SIM_TIME, NUM_VACCINATORS, VACCINATION_TIME, NUM_ADVERSEWAIT, ADVERSEWAIT_TIME)
     if(avg_total_time <= 30):
-        st.success("Patients can expect to be in the facility for {:0.1f} (+/- {:0.1f}) mins.".format(avg_total_time, conf_total_time)) 
+        st.success("Patients can expect to be in the facility for approximately {:0.1f} mins.".format(avg_total_time)) 
     elif(avg_total_time <= 60):
-        st.warning("Patients can expect to be in the facility for {:0.1f} (+/- {:0.1f}) mins.".format(avg_total_time, conf_total_time))
+        st.warning("Patients can expect to be in the facility for approximately {:0.1f} mins.".format(avg_total_time))
     else:
-        st.error("Patients can expect to be in the facility for {:0.1f} (+/- {:0.1f}) mins.".format(avg_total_time, conf_total_time))
+        st.error("Patients can expect to be in the facility for approximately {:0.1f} mins.".format(avg_total_time))
+        
     if(avg_checkin_waitN <= 5):
-        pass
-        #st.success("Approximately {:0.1f} patients will wait in line for check-in".format(avg_checkin_waitN))
+        st.success("An average of {:0.0f} patients will wait in line for check-in".format(avg_checkin_waitN))
     elif(avg_checkin_waitN <= 15):
         st.warning("An average of {:0.0f} patients will wait in line for check-in. May need more check-in counters".format(avg_checkin_waitN))
     else:
         st.error("An average of {:0.0f} patients will wait in line for check-in. Please add more check-in counters".format(avg_checkin_waitN))
 
+    if(avg_vaccine_waitN < 5):
+        st.success("An average of {:0.0f} patients will wait in line between check-in and vaccination.".format(avg_vaccine_waitN))
     if(avg_vaccine_waitN >= 5):
         st.error("An average of {:0.0f} patients will wait in line between check-in and vaccination. Please add more vaccination booths.".format(avg_vaccine_waitN))
-    if(avg_adverse_waitN >= 2):
+
+    if(avg_adverse_waitN <= 2):
+        st.error("An average of {:0.0f} patients will not have adverse waiting spots. Consider adding more.".format(avg_adverse_waitN))
+    else:
         st.error("An average of {:0.0f} patients will not have adverse waiting spots. Please add more.".format(avg_adverse_waitN))
-    st.info("Approximately {:0.0f} (+/- {:0.0f}) patients can expect to be vaccinated during this {} hour time-frame".format(tot_num_vaccinated, conf_total_vaccinated, hours_facility_open))
+    
+    st.info("Approximately {:0.0f} patients can expect to be vaccinated during this {} hour time-frame".format(tot_num_vaccinated, hours_facility_open))
 
