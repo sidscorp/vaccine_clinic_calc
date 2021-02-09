@@ -205,7 +205,7 @@ if(st.button('Calculate Metrics')):
         st.error("An average of {:0.0f} patients will wait in line between check-in and vaccination. Please add more vaccination booths.".format(avg_vaccine_waitN))
 
     if(avg_adverse_waitN <= 2):
-        st.error("An average of {:0.0f} patients will not have adverse waiting spots. Consider adding more.".format(avg_adverse_waitN))
+        st.success("An average of {:0.0f} patients will not have adverse waiting spots.".format(avg_adverse_waitN))
     else:
         st.error("An average of {:0.0f} patients will not have adverse waiting spots. Please add more.".format(avg_adverse_waitN))
     
