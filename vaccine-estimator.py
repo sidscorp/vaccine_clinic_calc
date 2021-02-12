@@ -164,15 +164,17 @@ st.markdown('The flow of patients through the clinic is assumed to be the follow
 st.markdown('If you would like to experiment with additional parameters or would like modifications, please feel free to reach out to Dr. Nambiar (Twitter: [@SiddNambiar](https://twitter.com/SiddNambiar)).')
 st.markdown('Some technical notes: Patient arrivals are assumed to adhere to a poisson arrival process. Times to check-in and get a shot are assumed to be triangular around the mean. To play around with modifying these distributions, \
             please feel free to reach out.')
-num_arrive_hour = st.number_input("Input the number of patients you expect will arrive in an hour", min_value = 1, value = 30)
-num_checkin = st.number_input("Input the number of check-in counters available for your patients", min_value = 1, value = 1)
-num_vaccine_booths = st.number_input("Input the number of vaccination booths available at your location", min_value = 1, value = 5)
-num_waiting_area_adverse = st.number_input("Input the number of waiting spots available for patients while being monitored for adverse reactions", min_value = 1, value = 5)
-hours_facility_open = st.number_input("Input the number of hours your facility is open for (e.g. 8)", min_value = 1, value = 8)
-CHECKIN_TIME = st.number_input("Input the approximate amount of time (mins) for a single patient to check-in at your facility", min_value = 0.1, value = 1.0)
-VACCINATION_TIME = st.number_input("Input the approximate amount of time (mins) for a single vaccination at your facility", min_value = 0.1, value = 4.0)
 
-if(st.button('Calculate Metrics')): 
+st.sidebar.title("Input values here")
+num_arrive_hour = st.sidebar.number_input("Input the number of patients you expect will arrive in an hour", min_value = 1, value = 30)
+num_checkin = st.sidebar.number_input("Input the number of check-in counters available for your patients", min_value = 1, value = 1)
+num_vaccine_booths = st.sidebar.number_input("Input the number of vaccination booths available at your location", min_value = 1, value = 5)
+num_waiting_area_adverse = st.sidebar.number_input("Input the number of waiting spots available for patients while being monitored for adverse reactions", min_value = 1, value = 5)
+hours_facility_open = st.sidebar.number_input("Input the number of hours your facility is open for (e.g. 8)", min_value = 1, value = 8)
+CHECKIN_TIME = st.sidebar.number_input("Input the approximate amount of time (mins) for a single patient to check-in at your facility", min_value = 0.1, value = 1.0)
+VACCINATION_TIME = st.sidebar.number_input("Input the approximate amount of time (mins) for a single vaccination at your facility", min_value = 0.1, value = 4.0)
+
+if(st.sidebar.button('Calculate Metrics')): 
     RANDOM_SEED = 42
     NUM_CHECKIN = num_checkin
     #CHECKIN_TIME = 1
