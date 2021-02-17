@@ -155,7 +155,7 @@ st.title('Vaccine Clinic Scheduling & Staffing Calculator')
 
 st.markdown('This calculator allows you to experiment with patient scheduling and personnel staffing at a single vaccination clinic \
             to estimate the effects on desired operational goals and metrics. This calculator was developed as a collaboration between \
-                Dr. Siddhartha Nambiar and Dr. Sreenath Chalil Madathil.')
+                Dr. Siddhartha Nambiar, Dr. Sreenath Chalil Madathil, and Vishesh Kumar.')
 st.markdown('The flow of patients through the clinic is assumed to be the following: Patients arrive to the facility according to a schedule. \
             Patients proceed to one (of maybe several) check-in stations. If all stations are occupied, patients wait in line.\
             Following check-in, patients proceed to one of several available vaccination booths (or wait in line if all are busy).\
