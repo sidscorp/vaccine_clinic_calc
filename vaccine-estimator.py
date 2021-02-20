@@ -155,13 +155,14 @@ st.title('Vaccine Clinic Scheduling & Staffing Calculator')
 
 st.markdown('This calculator allows you to experiment with patient scheduling and personnel staffing at a single vaccination clinic \
             to estimate the effects on desired operational goals and metrics. This calculator was developed as a collaboration between \
-                Dr. Siddhartha Nambiar, Dr. Sreenath Chalil Madathil, and Mr. Vishesh Kumar.')
+            [Dr. Sidd Nambiar](https://www.medicalhumanfactors.net/about-us/our-team/sidd-nambiar-phd/) , [Dr. Sreenath Chalil Madathil](https://expertise.utep.edu/profiles/schalil), \
+            and [Mr. Vishesh Kumar](http://visheshk.github.io/).')
 st.markdown('The flow of patients through the clinic is assumed to be the following: Patients arrive to the facility according to a schedule. \
             Patients proceed to one (of maybe several) check-in stations. If all stations are occupied, patients wait in line.\
             Following check-in, patients proceed to one of several available vaccination booths (or wait in line if all are busy).\
             After getting a vaccine, patients are asked to proceed to a waiting area for approximately 15 minutes while they are monitored for\
             adverse reactions. After 15 minutes, patients may safely leave the facility.')
-st.markdown('If you would like to experiment with additional parameters or would like modifications, please feel free to reach out to Dr. Nambiar (Twitter: [@SiddNambiar](https://twitter.com/SiddNambiar)).')
+st.markdown('If you would like to experiment with additional parameters or would like modifications, please feel free to reach out to Dr. Nambiar.')
 st.markdown('Some technical notes: Patient arrivals are assumed to adhere to a poisson arrival process. Times to check-in and get a shot are assumed to be triangular around the mean. To play around with modifying these distributions, \
             please feel free to reach out.')
 
