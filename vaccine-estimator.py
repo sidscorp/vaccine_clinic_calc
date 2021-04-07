@@ -167,6 +167,7 @@ st.markdown('Some technical notes: Patient arrivals are assumed to adhere to a p
             please feel free to reach out.')
 
 st.sidebar.title("Input values here")
+
 num_arrive_hour = st.sidebar.number_input("Patients expected per hour", min_value = 1, value = 30)
 # num_checkin = st.sidebar.number_input("Check-in counters", min_value = 1, value = 1)
 # num_vaccine_booths = st.sidebar.number_input("Vaccination booths", min_value = 1, value = 5)
