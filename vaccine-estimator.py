@@ -3,227 +3,350 @@ import simpy
 import numpy as np
 import math
 import streamlit as st
-from functools import partial, wraps
 import scipy.stats
+from dataclasses import dataclass
+from typing import List, Tuple
 
-def conf_interval(data, confidence=0.95):
-    a = 1.0 * np.array(data)
+
+def calculate_confidence_interval(data, confidence=0.95):
+    a = np.array(data)
     n = len(a)
     m, se = np.mean(a), scipy.stats.sem(a)
     h = se * scipy.stats.t.ppf((1 + confidence) / 2., n-1)
     return h
 
-def run_vaccination_simulation(NUM_REPS, RANDOM_SEED, NUM_CHECKIN, CHECKIN_TIME, PATIENT_INTER, SIM_TIME, NUM_VACCINATORS, VACCINATION_TIME, NUM_ADVERSEWAIT, ADVERSEWAIT_TIME):
-    output_checkin_waittime = []
-    output_checkin_waitnum = []
-    output_vaccination_waittime = []
-    output_vaccination_waitnum = []
-    output_adverse_waittime = []
-    output_adverse_waitnum = []
-    output_total_facility_time = []
-    output_num_vaccinated = []
 
-    my_bar = st.progress(0.0)
-    reps = math.ceil(NUM_REPS)
-    for replication in range(0,reps):
-        percent_complete = float(replication/reps)
-        facility_arrival_times = []
-        checkin_begin_times = []
-        checkin_end_times = []
-        vaccination_begin_times = []
-        vaccination_end_times = []
-        adverse_begin_times = []
-        adverse_end_times = []
-        facility_departure_times = []
+@dataclass
+class SimulationParameters:
+    num_reps: int
+    random_seed: int
+    num_checkin: int
+    checkin_time: float
+    patient_inter: float
+    sim_time: int
+    num_vaccinators: int
+    vaccination_time: float
+    num_adversewait: int
+    adversewait_time: float
 
 
-        class Vaccination_Clinic(object):
-            def __init__(self, env, num_checkin, checkin_time, num_vaccinators, vaccination_time, num_adversewait, adversewait_time):
-                self.env = env
-                self.checkin_personnel = simpy.Resource(env, num_checkin)
-                self.checkintime = checkin_time
-                self.vaccination_booth = simpy.Resource(env, num_vaccinators)
-                self.vaccinationtime = vaccination_time
-                self.adverse_event_spot = simpy.Resource(env, num_adversewait)
-                self.adversewaittime = adversewait_time
-
-            def checkin(self, patient):
-                yield self.env.timeout(np.random.triangular(max(0.2, CHECKIN_TIME - 1), CHECKIN_TIME, CHECKIN_TIME + 1))
-
-
-            def vaccinate(self, patient):
-                yield self.env.timeout(np.random.triangular(max(VACCINATION_TIME - 1, 0.2), VACCINATION_TIME, VACCINATION_TIME + 1))
-
-            def monitor_adverse(self, patient):
-                yield self.env.timeout(ADVERSEWAIT_TIME)
-
-        def patient(env, name, vac):
-            #print('%s arrives at the vaccination clinic at %.2f.' % (name, env.now))
-            facility_arrival_times.append(env.now)
-            with vac.checkin_personnel.request() as request:
-                yield request
-
-                #print("%s arrives at checkin counter" % name)
-                checkin_begin_times.append(env.now)
-                yield env.process(vac.checkin(name))
-                checkin_end_times.append(env.now)
-                #print("%s completes check-in at %.2f." % (name, env.now))
-
-            with vac.vaccination_booth.request() as request:
-                yield request
-                vaccination_begin_times.append(env.now)
-                #print("%s arrives at vaccination booth" % name)
-                yield env.process(vac.vaccinate(name))
-                vaccination_end_times.append(env.now)
+@dataclass
+class SimulationResults:
+    checkin_wait_time: float
+    checkin_wait_num: float
+    vaccination_wait_time: float
+    vaccination_wait_num: float
+    adverse_wait_time: float
+    adverse_wait_num: float
+    total_facility_time: float
+    total_facility_time_ci: float
+    num_vaccinated: float
+    num_vaccinated_ci: float
 
 
-                #print("%s gets shot in the arm at %.2f." % (name, env.now))
+class VaccinationClinic:
+    def __init__(self, env, num_checkin, checkin_time, num_vaccinators, vaccination_time, num_adversewait, adversewait_time):
+        self.env = env
+        self.checkin_personnel = simpy.Resource(env, num_checkin)
+        self.checkin_time = checkin_time
+        self.vaccination_booth = simpy.Resource(env, num_vaccinators)
+        self.vaccination_time = vaccination_time
+        self.adverse_event_spot = simpy.Resource(env, num_adversewait)
+        self.adversewait_time = adversewait_time
 
-            with vac.adverse_event_spot.request() as request:
-                yield request
-                adverse_begin_times.append(env.now)
-                #print("%s proceeds to wait to monitor for adverse events" % name)
-                yield env.process(vac.monitor_adverse(name))
-                adverse_end_times.append(env.now)
-                facility_departure_times.append(env.now)
-                #print("%s leaves facility safely at %.2f." % (name, env.now))
+    def checkin(self, patient):
+        yield self.env.timeout(np.random.triangular(
+            max(0.2, self.checkin_time - 1), 
+            self.checkin_time, 
+            self.checkin_time + 1
+        ))
 
-        def setup(env, num_checkin, checkin_time, num_vaccinators, vaccination_time, num_adversewait, adversewait_time, patient_inter):
-            vaccinationclinic = Vaccination_Clinic(env, num_checkin, checkin_time, num_vaccinators, vaccination_time, num_adversewait, adversewait_time)
-            i = 0
-            while True:
-                yield env.timeout(np.random.exponential(scale=patient_inter))
-                i += 1
-                env.process(patient(env, 'Patient %d' % i, vaccinationclinic))   
+    def vaccinate(self, patient):
+        yield self.env.timeout(np.random.triangular(
+            max(self.vaccination_time - 1, 0.2), 
+            self.vaccination_time, 
+            self.vaccination_time + 1
+        ))
+
+    def monitor_adverse(self, patient):
+        yield self.env.timeout(self.adversewait_time)
 
 
-        random.seed(RANDOM_SEED)
-
-        # Create an environment and start the setup process
-        env = simpy.Environment()
-        env.process(setup(env, NUM_CHECKIN, CHECKIN_TIME, NUM_VACCINATORS, VACCINATION_TIME, NUM_ADVERSEWAIT, ADVERSEWAIT_TIME, PATIENT_INTER))
-        # Execute!
-        env.run(until=SIM_TIME)
-        average_facility_total_time = np.mean([facility_departure_times[i] - facility_arrival_times[i] for i in range(len(facility_departure_times))])
-        #print("Approximate total time at facility is %.1f mins." % average_facility_total_time)
-        average_checkin_wait_time = np.mean([checkin_begin_times[i] - facility_arrival_times[i] for i in range(len(checkin_begin_times))])
-        #print("Approximate wait time between arrival and checkin is %.1f mins." % average_checkin_wait_time)
-        average_vaccination_wait_time = np.mean([vaccination_begin_times[i] - checkin_end_times[i] for i in range(len(vaccination_begin_times))])
-        #print("Approximate wait time between checkin and getting vaccinated is %.1f mins." % average_vaccination_wait_time)
-        average_adverse_wait_time = np.mean([adverse_begin_times[i] - vaccination_end_times[i] for i in range(len(adverse_begin_times))])
-        #print("Approximate wait time between getting vaccine and finding adverse monitoring wait spot is %.1f mins." % average_adverse_wait_time)
-
-        avg_waiting_checkin = []
-        for i in [x * 0.1 for x in range(0, SIM_TIME*10)]:
-            num_arrived_facility = sum(1 for j in facility_arrival_times if j <= i)
-            num_started_checin = sum(1 for j in checkin_begin_times if j <= i)
-            avg_waiting_checkin.append(num_arrived_facility - num_started_checin)
-        #print("Approximate # of patients waiting to checkin at any time is %.1f." % np.mean(avg_waiting_checkin))
-
-        avg_waiting_vaccine = []
-        for i in [x * 0.1 for x in range(0, SIM_TIME*10)]:
-            num_finished_checin = sum(1 for j in checkin_end_times if j <= i)
-            num_started_vaccine = sum(1 for j in vaccination_begin_times if j <= i)
-            avg_waiting_vaccine.append(num_finished_checin - num_started_vaccine)
-        #print("Approximate # of patients waiting between checkin and vaccine at any time is %.1f." % np.mean(avg_waiting_vaccine))
-
-        avg_waiting_adverse = []
-        for i in [x * 0.1 for x in range(0, SIM_TIME*10)]:
-            num_finished_vaccine = sum(1 for j in vaccination_end_times if j <= i)
-            num_started_adverse = sum(1 for j in adverse_begin_times if j <= i)
-            avg_waiting_adverse.append(num_finished_vaccine - num_started_adverse)
-        #print("Approximate # of patients waiting between checkin and vaccine at any time is %.1f." % np.mean(avg_waiting_vaccine))
-
-        output_checkin_waittime.append(average_checkin_wait_time)
-        output_checkin_waitnum.append(np.mean(avg_waiting_checkin))
-        output_vaccination_waittime.append(average_vaccination_wait_time)
-        output_vaccination_waitnum.append(np.mean(avg_waiting_vaccine))
-        output_adverse_waittime.append(average_adverse_wait_time)
-        output_adverse_waitnum.append(np.mean(avg_waiting_adverse))
-        output_total_facility_time.append(average_facility_total_time)
-        output_num_vaccinated.append(len(facility_departure_times))
+class ClinicSimulation:
+    def __init__(self, params: SimulationParameters):
+        self.params = params
+        random.seed(params.random_seed)
         
+    def patient_process(self, env, name, clinic, times):
+        arrival_time = env.now
+        times.facility_arrivals.append(arrival_time)
         
-        my_bar.progress(float(percent_complete))
-    my_bar.progress(1.0)   
-    return [np.mean(output_checkin_waittime), np.mean(output_checkin_waitnum), np.mean(output_vaccination_waittime), 
-            np.mean(output_vaccination_waitnum), np.mean(output_adverse_waittime), np.mean(output_adverse_waitnum), conf_interval(output_total_facility_time),
-            np.mean(output_total_facility_time), conf_interval(output_num_vaccinated), np.mean(output_num_vaccinated)]
+        with clinic.checkin_personnel.request() as request:
+            yield request
+            times.checkin_begins.append(env.now)
+            yield env.process(clinic.checkin(name))
+            times.checkin_ends.append(env.now)
 
+        with clinic.vaccination_booth.request() as request:
+            yield request
+            times.vaccination_begins.append(env.now)
+            yield env.process(clinic.vaccinate(name))
+            times.vaccination_ends.append(env.now)
 
-st.title('Vaccine Clinic Scheduling & Staffing Calculator')
-
-st.markdown('This calculator allows you to experiment with patient scheduling and personnel staffing at a single vaccination clinic \
-            to estimate the effects on desired operational goals and metrics. This calculator was developed as a collaboration between \
-            [Dr. Sidd Nambiar](https://www.medicalhumanfactors.net/about-us/our-team/sidd-nambiar-phd/) , [Dr. Sreenath Chalil Madathil](https://expertise.utep.edu/profiles/schalil), \
-            and [Mr. Vishesh Kumar](http://visheshk.github.io/).')
-st.markdown('The flow of patients through the clinic is assumed to be the following: Patients arrive to the facility according to a schedule. \
-            Patients proceed to one (of maybe several) check-in stations. If all stations are occupied, patients wait in line.\
-            Following check-in, patients proceed to one of several available vaccination booths (or wait in line if all are busy).\
-            After getting a vaccine, patients are asked to proceed to a waiting area for approximately 15 minutes while they are monitored for\
-            adverse reactions. After 15 minutes, patients may safely leave the facility.')
-st.markdown('If you would like to experiment with additional parameters or would like modifications, please feel free to reach out to Dr. Nambiar.')
-st.markdown('Some technical notes: Patient arrivals are assumed to adhere to a poisson arrival process. Times to check-in and get a shot are assumed to be triangular around the mean. To play around with modifying these distributions, \
-            please feel free to reach out.')
-
-st.sidebar.title("Input values here")
-
-num_arrive_hour = st.sidebar.number_input("Patients expected per hour", min_value = 1, value = 30)
-# num_checkin = st.sidebar.number_input("Check-in counters", min_value = 1, value = 1)
-# num_vaccine_booths = st.sidebar.number_input("Vaccination booths", min_value = 1, value = 5)
-num_waiting_area_adverse = st.sidebar.number_input("Waiting spots to monitor patients for adverse reactions", min_value = 1, value = 5)
-hours_facility_open = st.sidebar.number_input("Hours of facility opening", min_value = 1, value = 8)
-
-# CHECKIN_TIME = st.sidebar.number_input("Minutes for a single patient check-in", min_value = 0.1, value = 1.0)
-# VACCINATION_TIME = st.sidebar.number_input("Minutes for a single vaccination", min_value = 0.1, value = 4.0)
-
-with st.sidebar.beta_expander("Check-in counter parameters", True):
-    CHECKIN_TIME = st.number_input("Minutes for a single patient check-in", min_value = 0.1, value = 1.0)
-    num_checkin = st.number_input("Input the number of check-in counters available for your patients", min_value = 1, value = 1)
-    # num_arrive_hour = st.number_input("Input the number of patients you expect will arrive in an hour", min_value = 1, value = 30)
-
-with st.sidebar.beta_expander("Vaccination booth parameters", True):
-    num_vaccine_booths = st.number_input("Vaccination booths", min_value = 1, value = 5)
-    VACCINATION_TIME = st.number_input("Minutes for a single vaccination", min_value = 0.1, value = 4.0)    
-
-st.sidebar.write("""\n   \n    \n""")
-
-if(st.sidebar.button('Calculate Metrics')): 
-    RANDOM_SEED = 42
-    NUM_CHECKIN = num_checkin
-    #CHECKIN_TIME = 1
-    PATIENT_INTER = 60/num_arrive_hour
-    #NUM_REPS = 15
-    NUM_REPS = math.ceil(-0.114*num_arrive_hour + 33.4)
-    SIM_TIME = 60*hours_facility_open
-    NUM_VACCINATORS = num_vaccine_booths
-    #VACCINATION_TIME = 4
-    NUM_ADVERSEWAIT = num_waiting_area_adverse
-    ADVERSEWAIT_TIME = 15
-    [avg_checkin_waitT, avg_checkin_waitN, avg_vaccine_waitT, avg_vaccine_waitN, avg_adverse_waitT, avg_adverse_waitN, conf_total_time, avg_total_time, conf_total_vaccinated, tot_num_vaccinated] = run_vaccination_simulation(NUM_REPS, RANDOM_SEED, NUM_CHECKIN, CHECKIN_TIME, PATIENT_INTER, SIM_TIME, NUM_VACCINATORS, VACCINATION_TIME, NUM_ADVERSEWAIT, ADVERSEWAIT_TIME)
-    if(avg_total_time <= 30):
-        st.success("Patients can expect to be in the facility for approximately {:0.1f} mins.".format(avg_total_time)) 
-    elif(avg_total_time <= 60):
-        st.warning("Patients can expect to be in the facility for approximately {:0.1f} mins.".format(avg_total_time))
-    else:
-        st.error("Patients can expect to be in the facility for approximately {:0.1f} mins.".format(avg_total_time))
-        
-    if(avg_checkin_waitN <= 5):
-        st.success("An average of {:0.0f} patients will wait in line for check-in".format(avg_checkin_waitN))
-    elif(avg_checkin_waitN <= 15):
-        st.warning("An average of {:0.0f} patients will wait in line for check-in. May need more check-in counters".format(avg_checkin_waitN))
-    else:
-        st.error("An average of {:0.0f} patients will wait in line for check-in. Please add more check-in counters".format(avg_checkin_waitN))
-
-    if(avg_vaccine_waitN < 5):
-        st.success("An average of {:0.0f} patients will wait in line between check-in and vaccination.".format(avg_vaccine_waitN))
-    if(avg_vaccine_waitN >= 5):
-        st.error("An average of {:0.0f} patients will wait in line between check-in and vaccination. Please add more vaccination booths.".format(avg_vaccine_waitN))
-
-    if(avg_adverse_waitN <= 2):
-        st.success("An average of {:0.0f} patients will not have adverse waiting spots.".format(avg_adverse_waitN))
-    else:
-        st.error("An average of {:0.0f} patients will not have adverse waiting spots. Please add more.".format(avg_adverse_waitN))
+        with clinic.adverse_event_spot.request() as request:
+            yield request
+            times.adverse_begins.append(env.now)
+            yield env.process(clinic.monitor_adverse(name))
+            times.adverse_ends.append(env.now)
+            times.facility_departures.append(env.now)
     
-    st.info("Approximately {:0.0f} patients can expect to be vaccinated during this {} hour time-frame".format(tot_num_vaccinated, hours_facility_open))
+    def setup(self, env, clinic, times):
+        patient_count = 0
+        while True:
+            yield env.timeout(np.random.exponential(scale=self.params.patient_inter))
+            patient_count += 1
+            env.process(self.patient_process(env, f'Patient {patient_count}', clinic, times))
 
+    def calculate_statistics(self, times):
+        if not times.facility_departures:
+            return {
+                'total_time': 0,
+                'checkin_wait_time': 0,
+                'vaccination_wait_time': 0,
+                'adverse_wait_time': 0,
+                'avg_waiting_checkin': 0,
+                'avg_waiting_vaccine': 0,
+                'avg_waiting_adverse': 0,
+                'num_vaccinated': 0
+            }
+            
+        total_time = np.mean([
+            times.facility_departures[i] - times.facility_arrivals[i] 
+            for i in range(len(times.facility_departures))
+        ])
+        
+        checkin_wait = np.mean([
+            times.checkin_begins[i] - times.facility_arrivals[i] 
+            for i in range(len(times.checkin_begins))
+        ])
+        
+        vaccination_wait = np.mean([
+            times.vaccination_begins[i] - times.checkin_ends[i] 
+            for i in range(len(times.vaccination_begins))
+        ])
+        
+        adverse_wait = np.mean([
+            times.adverse_begins[i] - times.vaccination_ends[i] 
+            for i in range(len(times.adverse_begins))
+        ])
+        
+        avg_waiting_checkin = self.calculate_average_waiting(
+            times.facility_arrivals, times.checkin_begins, self.params.sim_time
+        )
+        
+        avg_waiting_vaccine = self.calculate_average_waiting(
+            times.checkin_ends, times.vaccination_begins, self.params.sim_time
+        )
+        
+        avg_waiting_adverse = self.calculate_average_waiting(
+            times.vaccination_ends, times.adverse_begins, self.params.sim_time
+        )
+        
+        return {
+            'total_time': total_time,
+            'checkin_wait_time': checkin_wait,
+            'vaccination_wait_time': vaccination_wait,
+            'adverse_wait_time': adverse_wait,
+            'avg_waiting_checkin': avg_waiting_checkin,
+            'avg_waiting_vaccine': avg_waiting_vaccine,
+            'avg_waiting_adverse': avg_waiting_adverse,
+            'num_vaccinated': len(times.facility_departures)
+        }
+    
+    def calculate_average_waiting(self, end_times, begin_times, sim_time, interval=5):
+        sample_points = range(0, int(sim_time), interval)
+        waiting_counts = []
+        
+        for t in sample_points:
+            num_ended = sum(1 for j in end_times if j <= t)
+            num_began = sum(1 for j in begin_times if j <= t)
+            waiting_counts.append(num_ended - num_began)
+            
+        return np.mean(waiting_counts) if waiting_counts else 0
+        
+    def run_single_replication(self):
+        class SimulationTimes:
+            def __init__(self):
+                self.facility_arrivals = []
+                self.checkin_begins = []
+                self.checkin_ends = []
+                self.vaccination_begins = []
+                self.vaccination_ends = []
+                self.adverse_begins = []
+                self.adverse_ends = []
+                self.facility_departures = []
+        
+        times = SimulationTimes()
+        env = simpy.Environment()
+        
+        clinic = VaccinationClinic(
+            env, 
+            self.params.num_checkin,
+            self.params.checkin_time,
+            self.params.num_vaccinators,
+            self.params.vaccination_time,
+            self.params.num_adversewait,
+            self.params.adversewait_time
+        )
+        
+        env.process(self.setup(env, clinic, times))
+        env.run(until=self.params.sim_time)
+        
+        return self.calculate_statistics(times)
+    
+    def run_simulation(self):
+        progress_bar = st.progress(0.0)
+        
+        metrics = {
+            'total_time': [],
+            'checkin_wait_time': [],
+            'vaccination_wait_time': [],
+            'adverse_wait_time': [],
+            'avg_waiting_checkin': [],
+            'avg_waiting_vaccine': [],
+            'avg_waiting_adverse': [],
+            'num_vaccinated': []
+        }
+        
+        for rep in range(self.params.num_reps):
+            stats = self.run_single_replication()
+            
+            for key in metrics:
+                metrics[key].append(stats[key])
+                
+            progress_bar.progress((rep + 1) / self.params.num_reps)
+        
+        progress_bar.progress(1.0)
+        
+        return SimulationResults(
+            checkin_wait_time=np.mean(metrics['checkin_wait_time']),
+            checkin_wait_num=np.mean(metrics['avg_waiting_checkin']),
+            vaccination_wait_time=np.mean(metrics['vaccination_wait_time']),
+            vaccination_wait_num=np.mean(metrics['avg_waiting_vaccine']),
+            adverse_wait_time=np.mean(metrics['adverse_wait_time']),
+            adverse_wait_num=np.mean(metrics['avg_waiting_adverse']),
+            total_facility_time=np.mean(metrics['total_time']),
+            total_facility_time_ci=calculate_confidence_interval(metrics['total_time']),
+            num_vaccinated=np.mean(metrics['num_vaccinated']),
+            num_vaccinated_ci=calculate_confidence_interval(metrics['num_vaccinated'])
+        )
+
+
+def render_ui():
+    st.title('Vaccine Clinic Scheduling & Staffing Calculator')
+
+    st.markdown("""
+    This calculator allows you to experiment with patient scheduling and personnel staffing at a single vaccination clinic 
+    to estimate the effects on desired operational goals and metrics. This calculator was developed as a collaboration between 
+    [Dr. Sidd Nambiar](https://www.medicalhumanfactors.net/about-us/our-team/sidd-nambiar-phd/), [Dr. Sreenath Chalil Madathil](https://expertise.utep.edu/profiles/schalil), 
+    and [Mr. Vishesh Kumar](http://visheshk.github.io/).
+    
+    The flow of patients through the clinic is assumed to be the following: Patients arrive to the facility according to a schedule. 
+    Patients proceed to one (of maybe several) check-in stations. If all stations are occupied, patients wait in line.
+    Following check-in, patients proceed to one of several available vaccination booths (or wait in line if all are busy).
+    After getting a vaccine, patients are asked to proceed to a waiting area for approximately 15 minutes while they are monitored for
+    adverse reactions. After 15 minutes, patients may safely leave the facility.
+    
+    If you would like to experiment with additional parameters or would like modifications, please feel free to reach out to Dr. Nambiar.
+    
+    Some technical notes: Patient arrivals are assumed to adhere to a poisson arrival process. Times to check-in and get a shot are assumed to be triangular around the mean. To play around with modifying these distributions, 
+    please feel free to reach out.
+    """)
+
+    st.sidebar.title("Input values here")
+
+    num_arrive_hour = st.sidebar.number_input("Patients expected per hour", min_value=1, value=30)
+    num_waiting_area_adverse = st.sidebar.number_input("Waiting spots to monitor patients for adverse reactions", min_value=1, value=5)
+    hours_facility_open = st.sidebar.number_input("Hours of facility opening", min_value=1, value=8)
+
+    with st.sidebar.expander("Check-in counter parameters", True):
+        checkin_time = st.number_input("Minutes for a single patient check-in", min_value=0.1, value=1.0)
+        num_checkin = st.number_input("Input the number of check-in counters available for your patients", min_value=1, value=1)
+
+    with st.sidebar.expander("Vaccination booth parameters", True):
+        num_vaccine_booths = st.number_input("Vaccination booths", min_value=1, value=5)
+        vaccination_time = st.number_input("Minutes for a single vaccination", min_value=0.1, value=4.0)    
+
+    st.sidebar.write("\n   \n    \n")
+
+    return {
+        'num_arrive_hour': num_arrive_hour,
+        'num_waiting_area_adverse': num_waiting_area_adverse,
+        'hours_facility_open': hours_facility_open,
+        'checkin_time': checkin_time,
+        'num_checkin': num_checkin,
+        'num_vaccine_booths': num_vaccine_booths,
+        'vaccination_time': vaccination_time,
+        'run_sim': st.sidebar.button('Calculate Metrics')
+    }
+
+
+def display_results(results: SimulationResults, hours_facility_open: int):
+    if results.total_facility_time <= 30:
+        st.success(f"Patients can expect to be in the facility for approximately {results.total_facility_time:0.1f} mins.")
+    elif results.total_facility_time <= 60:
+        st.warning(f"Patients can expect to be in the facility for approximately {results.total_facility_time:0.1f} mins.")
+    else:
+        st.error(f"Patients can expect to be in the facility for approximately {results.total_facility_time:0.1f} mins.")
+        
+    if results.checkin_wait_num <= 5:
+        st.success(f"An average of {results.checkin_wait_num:0.0f} patients will wait in line for check-in")
+    elif results.checkin_wait_num <= 15:
+        st.warning(f"An average of {results.checkin_wait_num:0.0f} patients will wait in line for check-in. May need more check-in counters")
+    else:
+        st.error(f"An average of {results.checkin_wait_num:0.0f} patients will wait in line for check-in. Please add more check-in counters")
+
+    if results.vaccination_wait_num < 5:
+        st.success(f"An average of {results.vaccination_wait_num:0.0f} patients will wait in line between check-in and vaccination.")
+    else:
+        st.error(f"An average of {results.vaccination_wait_num:0.0f} patients will wait in line between check-in and vaccination. Please add more vaccination booths.")
+
+    if results.adverse_wait_num <= 2:
+        st.success(f"An average of {results.adverse_wait_num:0.0f} patients will not have adverse waiting spots.")
+    else:
+        st.error(f"An average of {results.adverse_wait_num:0.0f} patients will not have adverse waiting spots. Please add more.")
+    
+    st.info(f"Approximately {results.num_vaccinated:0.0f} patients can expect to be vaccinated during this {hours_facility_open} hour time-frame")
+
+
+def main():
+    inputs = render_ui()
+    
+    if inputs['run_sim']:
+        random_seed = 42
+        patient_inter = 60 / inputs['num_arrive_hour']
+        num_reps = math.ceil(-0.114 * inputs['num_arrive_hour'] + 33.4)
+        sim_time = 60 * inputs['hours_facility_open']
+        adverse_wait_time = 15
+        
+        params = SimulationParameters(
+            num_reps=num_reps,
+            random_seed=random_seed,
+            num_checkin=inputs['num_checkin'],
+            checkin_time=inputs['checkin_time'],
+            patient_inter=patient_inter,
+            sim_time=sim_time,
+            num_vaccinators=inputs['num_vaccine_booths'],
+            vaccination_time=inputs['vaccination_time'],
+            num_adversewait=inputs['num_waiting_area_adverse'],
+            adversewait_time=adverse_wait_time
+        )
+        
+        simulation = ClinicSimulation(params)
+        results = simulation.run_simulation()
+        
+        display_results(results, inputs['hours_facility_open'])
+
+
+if __name__ == "__main__":
+    main()
