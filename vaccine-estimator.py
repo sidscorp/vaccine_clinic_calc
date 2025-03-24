@@ -386,24 +386,41 @@ def render_ui() -> Dict:
     Returns:
         Dict: A dictionary containing the input values from the UI.
     """
-    st.title('Vaccine Clinic Scheduling & Staffing Calculator')
+    st.title('COVID-19 Vaccine Clinic Simulator: A Decision Science Demo')
 
     st.markdown("""
-    This calculator allows you to experiment with patient scheduling and personnel staffing at a single vaccination clinic 
-    to estimate the effects on desired operational goals and metrics. This calculator was developed as a collaboration between 
-    [Dr. Sidd Nambiar](https://www.medicalhumanfactors.net/about-us/our-team/sidd-nambiar-phd/), [Dr. Sreenath Chalil Madathil](https://expertise.utep.edu/profiles/schalil), 
-    and [Mr. Vishesh Kumar](http://visheshk.github.io/).
+    ## 📋 A Decision Science Demonstration
 
-    The flow of patients through the clinic is assumed to be the following: Patients arrive to the facility according to a schedule. 
-    Patients proceed to one (of maybe several) check-in stations. If all stations are occupied, patients wait in line.
-    Following check-in, patients proceed to one of several available vaccination booths (or wait in line if all are busy).
-    After getting a vaccine, patients are asked to proceed to a waiting area for approximately 15 minutes while they are monitored for
-    adverse reactions. After 15 minutes, patients may safely leave the facility.
+    **Historical Context**: This application was developed during the COVID-19 pandemic (2020-2021) when mass vaccination clinics were being deployed globally. It served as a practical tool to help clinic administrators optimize their operations during this critical time.
 
-    If you would like to experiment with additional parameters or would like modifications, please feel free to reach out to Dr. Nambiar.
+    **Current Purpose**: This simulator now serves as a demonstration of Decision Science principles, showing how operations research and simulation modeling can be applied to real-world healthcare scenarios.
 
-    Some technical notes: Patient arrivals are assumed to adhere to a poisson arrival process. Times to check-in and get a shot are assumed to be triangular around the mean. To play around with modifying these distributions, 
-    please feel free to reach out.
+    ### About the Simulation
+
+    This calculator allows you to experiment with patient scheduling and personnel staffing at a vaccination clinic to estimate the effects on operational metrics. It demonstrates:
+
+    - **Discrete Event Simulation** using SimPy
+    - **Queue Theory** application in healthcare
+    - **Resource Allocation** optimization
+    - **Monte Carlo methods** for estimating confidence intervals
+    - **What-if scenario planning** for decision makers
+
+    ### Patient Flow Model
+
+    The simulation follows this process flow:
+    1. Patients arrive according to a configurable schedule
+    2. Patients check in at available stations (queuing if necessary)
+    3. Patients proceed to vaccination booths (queuing if necessary)
+    4. After vaccination, patients wait in a monitoring area for 15 minutes
+    5. Patients exit the facility
+
+    ### Technical Implementation
+
+    - Patient arrivals: Poisson process (exponential) or fixed intervals
+    - Service times: Triangular distributions around specified means
+    - Analysis: Multiple simulation replications for statistical validity
+
+    Originally developed as a collaboration between [Dr. Sidd Nambiar](https://www.medicalhumanfactors.net/about-us/our-team/sidd-nambiar-phd/), [Dr. Sreenath Chalil Madathil](https://expertise.utep.edu/profiles/schalil), and [Mr. Vishesh Kumar](http://visheshk.github.io/).
     """)
 
     st.sidebar.title("Input Values")
@@ -452,7 +469,7 @@ def display_results(results: SimulationResults, hours_facility_open: int):
         results (SimulationResults): The simulation results object.
         hours_facility_open (int): The number of hours the facility is open.
     """
-    st.header("Simulation Results")
+    st.header("Simulation Results & Decision Insights")
 
     col1, col2 = st.columns(2)
 
